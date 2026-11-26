@@ -12,5 +12,5 @@
   "homepage": "https://yousafkhamza.github.io/apivane/",
   "repository": { "type": "git", "url": "git+https://github.com/yousafkhamza/apivane.git", "directory": "packages/cli" },
   "bugs": "https://github.com/yousafkhamza/apivane/issues",
-  "publishConfig": { "access": "public", "provenance": true }
+  "publishConfig": { "access": "public" }
 }

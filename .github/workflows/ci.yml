@@ -168,17 +168,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           V: ${{ steps.ver.outputs.version }}
+        # Preferred: npm Trusted Publishing (OIDC, no token). NPM_TOKEN is only a fallback.
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::warning::NPM_TOKEN secret not set — skipped npm publish (GitHub release and Docker image still published)."
-            exit 0
-          fi
           if npm view "apivane-cli@$V" version >/dev/null 2>&1; then
             echo "apivane-cli@$V is already on npm — skipping."
             exit 0
           fi
+          npm install -g npm@11 --no-audit --no-fund   # trusted publishing needs npm >= 11.5.1
           npm publish --provenance --access public || {
-            echo "::error::npm publish failed. A 403 mentioning two-factor means the NPM_TOKEN needs 'Bypass two-factor authentication' (granular token) or must be an Automation token. Fix the secret, then 'Re-run failed jobs'."
+            echo "::error::npm publish failed. Set up Trusted Publishing on npmjs.com (package apivane-cli → Settings → Trusted publisher → GitHub Actions, repo yousafkhamza/apivane, workflow ci.yml), or use an NPM_TOKEN with 'Bypass 2FA'. Then 'Re-run failed jobs'."
             exit 1
           }
       - name: Image name (lowercase)
