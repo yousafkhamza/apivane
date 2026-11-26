@@ -155,18 +155,32 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           V: v${{ steps.ver.outputs.version }}
-        run: gh release create "$V" dist-ext/*.zip --target "$GITHUB_SHA" --title "$V" --notes-file release-notes.md
+        run: |
+          if gh release view "$V" >/dev/null 2>&1; then
+            echo "$V already released — uploading any missing extension zips"
+            gh release upload "$V" dist-ext/*.zip --clobber
+          else
+            gh release create "$V" dist-ext/*.zip --target "$GITHUB_SHA" --title "$V" --notes-file release-notes.md
+          fi
       - name: Publish to npm
         if: steps.ver.outputs.release == 'true'
         working-directory: packages/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          V: ${{ steps.ver.outputs.version }}
         run: |
           if [ -z "$NODE_AUTH_TOKEN" ]; then
             echo "::warning::NPM_TOKEN secret not set — skipped npm publish (GitHub release and Docker image still published)."
             exit 0
           fi
-          npm publish --provenance --access public
+          if npm view "apivane-cli@$V" version >/dev/null 2>&1; then
+            echo "apivane-cli@$V is already on npm — skipping."
+            exit 0
+          fi
+          npm publish --provenance --access public || {
+            echo "::error::npm publish failed. A 403 mentioning two-factor means the NPM_TOKEN needs 'Bypass two-factor authentication' (granular token) or must be an Automation token. Fix the secret, then 'Re-run failed jobs'."
+            exit 1
+          }
       - name: Image name (lowercase)
         if: steps.ver.outputs.release == 'true'
         id: img

@@ -87,6 +87,18 @@ function main([cmd, arg]) {
     return;
   }
   if (cmd !== 'next') throw new Error('usage: release.mjs next | apply X.Y.Z');
+  // Re-run of a release whose tag already points at this commit (e.g. npm publish failed):
+  // finish the same version instead of skipping. Later steps are idempotent.
+  let headTag = '';
+  try { headTag = git('describe', '--tags', '--exact-match', '--match', 'v[0-9]*', 'HEAD'); } catch { /* not tagged */ }
+  if (headTag) {
+    setOutput('release', 'true');
+    setOutput('version', headTag.slice(1));
+    setOutput('existing', 'true');
+    fs.writeFileSync(path.join(root, 'release-notes.md'), releaseNotes(headTag.slice(1), []));
+    console.log(`${headTag} already points at HEAD — finishing that release.`);
+    return;
+  }
   let last = '';
   try { last = git('describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*'); } catch { /* no tags yet */ }
   const commits = readCommits(last ? `${last}..HEAD` : '');
