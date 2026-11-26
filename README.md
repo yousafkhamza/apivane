@@ -22,7 +22,7 @@ Browsers block many cross-site API calls (CORS). Pick what you need — your col
 
 | | Browser only | Extension | Local agent |
 |---|---|---|---|
-| Install | nothing | Chrome / Edge / Firefox add-on | `npx apivane` or Docker |
+| Install | nothing | Chrome / Edge / Firefox add-on | `npx apivane-cli` or Docker |
 | APIs without CORS headers | ✗ | ✓ | ✓ |
 | All response headers visible | ✗ | ✓ | ✓ |
 | `localhost` / internal APIs | ✗ | ✓ | ✓ |
@@ -37,7 +37,7 @@ Reload the app, then **Connect → Browser extension**.
 
 ### Local agent
 ```bash
-npx apivane                 # opens http://127.0.0.1:7878 with a one-time token
+npx apivane-cli                 # opens http://127.0.0.1:7878 with a one-time token
 # or
 docker run --rm -p 127.0.0.1:7878:7878 -v "$PWD:/work" ghcr.io/yousafkhamza/apivane
 ```
@@ -46,7 +46,7 @@ On the website, choose **Connect → Local agent** and paste the token printed i
 ## Run in CI
 
 ```bash
-npx apivane run --env staging --reporter cli,junit --out reports
+npx apivane-cli run --env staging --reporter cli,junit --out reports
 ```
 Exit code `1` on any failed check or a security finding at or above `--fail-on` (default `high`).
 

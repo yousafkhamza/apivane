@@ -110,7 +110,7 @@ test('blocked request shows the one-step fix', async ({ page }) => {
   await openItem(page, 'API without CORS');
   await page.click('button.send');
   await expect(page.locator('.err h3')).toHaveText('The browser blocked this request');
-  await expect(page.locator('.err')).toContainText('npx apivane');
+  await expect(page.locator('.err')).toContainText('npx apivane-cli');
 });
 
 test('autosave keeps changes after reload', async ({ page }) => {

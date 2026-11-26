@@ -23,7 +23,7 @@ export function engineChoices() {
     c('ext', '🧩', 'Browser extension', 'Chrome, Edge, Firefox. No CORS limit and every response header is visible.', ext ? [`v${ENGINES.ext.info().version} detected`, true] : ['Not installed', false],
       ext ? '' : `<div class="cmd"><span>Get it: <a href="${STORE_LINKS.chrome}" target="_blank" rel="noopener">Chrome / Edge</a> · <a href="${STORE_LINKS.firefox}" target="_blank" rel="noopener">Firefox</a></span><button class="btn sm" data-act="ext-recheck">Check again</button></div>`) +
     c('agent', '⌘', 'Local agent', 'Saves collections as files in your repo and runs them in CI. Localhost only, token-protected.', ag ? ['Connected', true] : ['Not connected', false],
-      ag || isAgentOrigin() ? '' : `<div class="box" style="display:grid;gap:8px"><div class="cmd"><span>npx apivane</span><button class="btn sm" data-act="copy" data-text="npx apivane">Copy</button></div>
+      ag || isAgentOrigin() ? '' : `<div class="box" style="display:grid;gap:8px"><div class="cmd"><span>npx apivane-cli</span><button class="btn sm" data-act="copy" data-text="npx apivane-cli">Copy</button></div>
         <div class="grid2"><label class="field">Agent address<input id="agentUrl" value="${esc(agent.base)}" spellcheck="false"></label><label class="field">Token from terminal<input id="agentToken" type="password" value="${esc(agent.token)}" autocomplete="off" spellcheck="false"></label></div>
         <button class="btn primary" data-act="agent-connect">Connect</button></div>`);
 }
@@ -62,5 +62,5 @@ export function openImport() {
 export function openRunReport(rows) {
   const pass = rows.filter((r) => r.ok).length;
   openDialog(`Run finished: ${pass}/${rows.length} passed`, rows.map((r) => `<div class="row"><span class="tag ${r.ok ? 't-pass' : 't-fail'}">${r.ok ? 'PASS' : 'FAIL'}</span><div style="flex:1"><a href="#" data-act="open" data-id="${r.id}">${esc(r.name)}</a><div class="muted" style="font-size:12.5px">${esc(r.detail)}</div></div><span class="mono muted">${r.ms ?? '–'} ms</span></div>`).join('') +
-    '<p class="hint">Same run in CI: <span class="mono">npx apivane run --reporter junit</span></p>');
+    '<p class="hint">Same run in CI: <span class="mono">npx apivane-cli run --reporter junit</span></p>');
 }

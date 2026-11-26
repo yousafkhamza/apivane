@@ -15,7 +15,7 @@ No account and no login. Your work stays in your browser with autosave, and a ba
 Browsers block many API calls from websites (CORS), so there are three ways to send requests:
 🌐 Browser only: nothing to install
 🧩 Chrome / Edge / Firefox extension: no CORS limits, every header visible
-⌘ Local agent (npx apivane or Docker): localhost APIs, repo files, CI runner
+⌘ Local agent (npx apivane-cli or Docker): localhost APIs, repo files, CI runner
 
 How it's built:
 ⚙️ Zero dependencies: plain JavaScript modules, no bundler, no lockfile to break

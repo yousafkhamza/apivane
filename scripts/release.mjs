@@ -59,7 +59,7 @@ export function releaseNotes(version, commits, repoUrl = '') {
   }
   const sec = (t, l) => (l.length ? `### ${t}\n${l.join('\n')}\n\n` : '');
   return `## ApiVane ${version}\n\n${sec('⚠ Breaking changes', groups.breaking)}${sec('Features', groups.feat)}${sec('Fixes', groups.fix)}${sec('Other', groups.other)}` +
-    `### Install\n- Web: ${process.env.SITE_URL || 'https://yousafkhamza.github.io/apivane/'}\n- CLI: \`npx apivane@${version}\`\n- Docker: \`ghcr.io/yousafkhamza/apivane:${version}\`\n- Extensions: zips attached below\n`;
+    `### Install\n- Web: ${process.env.SITE_URL || 'https://yousafkhamza.github.io/apivane/'}\n- CLI: \`npx apivane-cli@${version}\`\n- Docker: \`ghcr.io/yousafkhamza/apivane:${version}\`\n- Extensions: zips attached below\n`;
 }
 
 const git = (...a) => execFileSync('git', a, { cwd: root, encoding: 'utf8' }).trim();

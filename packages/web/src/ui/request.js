@@ -106,5 +106,5 @@ function testsTab(r) {
     ${caps.map(([k, v], i) => `<div class="trow" style="grid-template-columns:1fr 1fr 34px"><input data-cap="${i}" data-cf="k" value="${esc(k)}" placeholder="variable name" aria-label="Variable name"><input data-cap="${i}" data-cf="v" value="${esc(v)}" placeholder="$.token or header:x-id" aria-label="Path"><button class="rm" data-act="rm-cap" data-i="${i}" aria-label="Remove">✕</button></div>`).join('')}
     <button class="btn sm" data-act="add-cap">+ Save a value</button><p class="hint">Example: save <span class="mono">$.accessToken</span> as <span class="var">{{token}}</span>, then use it in the next request.</p></div>
     <div class="switch"><div>Security checks<small>Run SEC rules on every response</small></div>${seg('sec', r.security === 'off' ? 'off' : 'default', [['default', 'On'], ['off', 'Off']])}</div>
-    <p class="hint">No scripting needed. The same checks run in CI with <span class="mono">npx apivane run</span>.</p>`;
+    <p class="hint">No scripting needed. The same checks run in CI with <span class="mono">npx apivane-cli run</span>.</p>`;
 }

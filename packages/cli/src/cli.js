@@ -96,7 +96,7 @@ async function init(o) {
     requests: [newRequest({ folder: 'examples', name: 'List posts', url: '{{baseUrl}}/posts', auth: { type: 'none' }, params: [{ k: '_limit', v: '2', on: true }], tests: [{ status: 200 }, { jsonpath: '$[0].id', exists: true }, { maxDurationMs: 2000 }] })],
   };
   await writeCollection(dir, workspaceToFiles(ws));
-  console.log(`Created ${dir}\nTry:  npx apivane run --env local\nSecrets go in environment variables, e.g. TOKEN=... (referenced as \${env:TOKEN}).`);
+  console.log(`Created ${dir}\nTry:  npx apivane-cli run --env local\nSecrets go in environment variables, e.g. TOKEN=... (referenced as \${env:TOKEN}).`);
   return 0;
 }
 

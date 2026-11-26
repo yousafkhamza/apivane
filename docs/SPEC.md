@@ -13,9 +13,9 @@ don't want to pay for cloud sync or seats.
 |---|---|---|
 | Public demo | GitHub Pages UI | Requests go through the local agent if running; otherwise only CORS-enabled APIs work (show a clear banner explaining this). Collections in IndexedDB. |
 | Extension | Chrome / Edge / Firefox add-on | Pages UI sends requests through the extension: no CORS limit, all response headers visible, per-host permission. |
-| Local | `npx apivane` | Agent serves the UI + proxy, reads/writes `.apivane/` in the current folder. Opens browser. |
+| Local | `npx apivane-cli` | Agent serves the UI + proxy, reads/writes `.apivane/` in the current folder. Opens browser. |
 | Docker | `docker run -p 127.0.0.1:7878:7878 -v ${PWD}:/work ghcr.io/yousafkhamza/apivane` | Same as local. |
-| CI | `npx apivane run` or the GitHub Action | Headless, exit code + reports. |
+| CI | `npx apivane-cli run` or the GitHub Action | Headless, exit code + reports. |
 
 ## 3. Collection file format (`.apivane/`)
 ```
@@ -73,12 +73,12 @@ All endpoints require header `X-ApiVane-Token`.
 
 ## 6. CLI runner
 ```
-npx apivane run [path=.apivane] --env staging [--folder users] [--bail]
+npx apivane-cli run [path=.apivane] --env staging [--folder users] [--bail]
   [--reporter cli,junit,json,html] [--out reports/] [--security strict|default|off]
 ```
 - Exit code 1 on any failed test or security finding at/above `--fail-on` (default: high).
 - JUnit XML for GitHub/GitLab test tabs; HTML report single file.
-- GitHub Action (`action.yml`, composite) wraps `npx apivane run`, uploads the report, writes a job summary.
+- GitHub Action (`action.yml`, composite) wraps `npx apivane-cli run`, uploads the report, writes a job summary.
 
 ## 7. Security checks (rule-based, no AI needed)
 Each rule: id, severity (info/low/medium/high), description, fix hint. Run on every response.

@@ -61,7 +61,7 @@ function emptyState() {
 }
 
 function errorCard(e) {
-  const fixes = `<p><b>Fix it in one step:</b></p><ol><li><a href="#" data-act="engine">Add the ApiVane extension</a> (Chrome, Edge, Firefox)</li><li>or run <code>npx apivane</code> on your computer</li><li>or <a href="#" data-act="curl">copy as cURL</a> and run it in a terminal</li></ol>`;
+  const fixes = `<p><b>Fix it in one step:</b></p><ol><li><a href="#" data-act="engine">Add the ApiVane extension</a> (Chrome, Edge, Firefox)</li><li>or run <code>npx apivane-cli</code> on your computer</li><li>or <a href="#" data-act="curl">copy as cURL</a> and run it in a terminal</li></ol>`;
   switch (e.kind) {
     case 'var': {
       const login = S.ws.requests.find((r) => Object.keys(r.capture || {}).some((k) => e.missing.includes(k)));
@@ -71,7 +71,7 @@ function errorCard(e) {
     case 'url': return `<div class="box err"><h3>That URL doesn’t look right</h3><p class="muted">${esc(e.message)}</p></div>`;
     case 'timeout': return '<div class="box err"><h3>No answer after 30 seconds</h3><p class="muted">The server may be down or slow. Check the URL and try again.</p></div>';
     case 'invalid': return `<div class="box err"><h3>The browser refused this request</h3><p class="muted">${esc(e.message)}</p><p>Usually a header name or value with characters that aren’t allowed.</p></div>`;
-    case 'agent-down': return '<div class="box err"><h3>Local agent isn’t running</h3><p>Start it with <code>npx apivane</code>, or <a href="#" data-act="engine">switch engine</a>.</p></div>';
+    case 'agent-down': return '<div class="box err"><h3>Local agent isn’t running</h3><p>Start it with <code>npx apivane-cli</code>, or <a href="#" data-act="engine">switch engine</a>.</p></div>';
     case 'agent-token': return '<div class="box err"><h3>Agent token needed</h3><p>Paste the token printed in your terminal into <a href="#" data-act="engine">Connect</a>.</p></div>';
     case 'blocked': {
       const why = e.insecure ? 'This page is secure (https), so the browser blocks plain <code>http://</code> calls.'

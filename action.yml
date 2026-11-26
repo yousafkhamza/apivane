@@ -18,7 +18,7 @@ inputs:
     description: Fail on security findings at or above high | medium | low | none
     default: high
   version:
-    description: apivane npm version to use
+    description: apivane-cli npm version to use
     default: latest
 runs:
   using: composite
@@ -35,7 +35,7 @@ runs:
         args=(run --dir "$AV_DIR" --reporter cli,junit,markdown --out apivane-reports --fail-on "$AV_FAIL_ON")
         if [ -n "$AV_ENV" ]; then args+=(--env "$AV_ENV"); fi
         if [ -n "$AV_FOLDER" ]; then args+=(--folder "$AV_FOLDER"); fi
-        npx --yes "apivane@${AV_VERSION}" "${args[@]}"
+        npx --yes "apivane-cli@${AV_VERSION}" "${args[@]}"
     - name: Upload report
       if: always()
       uses: actions/upload-artifact@v4

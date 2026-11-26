@@ -204,7 +204,7 @@ const A = {
   'agent-connect': async () => {
     agent.base = $('#agentUrl').value.trim() || 'http://127.0.0.1:7878';
     agent.token = $('#agentToken').value.trim();
-    if (await detectAgent()) { setEngine('agent'); toast('Connected to the local agent'); } else toast('Could not reach the agent. Is `npx apivane` running and the token right?');
+    if (await detectAgent()) { setEngine('agent'); toast('Connected to the local agent'); } else toast('Could not reach the agent. Is `npx apivane-cli` running and the token right?');
     tourOpen() ? rerenderStep() : openEngineDialog();
   },
   'set-autosave': (el) => { LS.set('autosave', el.dataset.k); if (el.dataset.k === '1' && S.dirty) save(); renderSave(); openSettings(); },

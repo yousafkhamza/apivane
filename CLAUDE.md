@@ -1,7 +1,7 @@
 # ApiVane — project guide for Claude Code
 
 Free, self-hosted API client + CI test runner with built-in security checks and optional AI.
-Public UI on GitHub Pages; private use via `npx apivane` or Docker (one command).
+Public UI on GitHub Pages; private use via `npx apivane-cli` or Docker (one command).
 Author: Yousaf Hamza (github.com/yousafkhamza). Credit "By Yousaf Hamza" in UI footer and README.
 
 ## Credit-saving rules (follow every session)

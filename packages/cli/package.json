@@ -1,5 +1,5 @@
 {
-  "name": "apivane",
+  "name": "apivane-cli",
   "version": "0.1.0",
   "description": "Free API client, CI test runner and security checks. Local agent for the ApiVane web app.",
   "type": "module",
