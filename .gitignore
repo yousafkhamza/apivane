@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-ext/
+reports/
+apivane-reports/
+test-results/
+playwright-report/
+packages/cli/web/
+packages/cli/core/
+packages/cli/LICENSE
+.env
+.env.*
+*.log
+.DS_Store

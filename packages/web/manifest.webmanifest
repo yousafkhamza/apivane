@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "ApiVane — API client",
+  "short_name": "ApiVane",
+  "description": "Free API client with tests and security checks. Runs in your browser and in CI.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#15130f",
+  "theme_color": "#a9501f",
+  "categories": ["developer", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src * http://127.0.0.1:* http://localhost:*; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<!--agent-->
+<title>ApiVane — free API client with tests and security checks</title>
+<meta name="description" content="Free, open-source API client in your browser. Send requests, write tests without code, catch security issues and run the same collection in GitHub Actions. No account needed.">
+<meta name="keywords" content="free postman alternative, API client, self-hosted API client, API security testing, API testing GitHub Actions">
+<link rel="canonical" href="%SITE_URL%">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ApiVane — free API client with tests and security checks">
+<meta property="og:description" content="Send requests, test responses, catch security issues. Collections live in git and run in CI.">
+<meta property="og:url" content="%SITE_URL%">
+<meta property="og:image" content="%SITE_URL%icons/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f2ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15130f" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ApiVane","applicationCategory":"DeveloperApplication","operatingSystem":"Web, Windows, macOS, Linux","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Yousaf Hamza","url":"https://github.com/yousafkhamza"},"url":"%SITE_URL%","license":"https://opensource.org/licenses/MIT"}</script>
+<script src="theme.js"></script>
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="src/main.js"></script>
+</head>
+<body>
+<noscript><p style="padding:20px">ApiVane needs JavaScript. It runs fully in your browser.</p></noscript>
+
+<!-- first-run walkthrough -->
+<div class="boot" id="boot" hidden>
+  <div class="splash" id="splash" aria-hidden="true">
+    <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 40v44M36 84h24"/>
+      <text x="48" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="11" font-weight="700" font-family="system-ui">N</text>
+      <g class="arrow"><path d="M18 40h56M74 40l-10-8M74 40l-10 8M18 40l-7-9M18 40l-7 9M25 40l-7-9M25 40l-7 9"/></g>
+      <circle cx="48" cy="40" r="3.5" fill="currentColor"/>
+    </svg>
+    <div class="word">Api<b>Vane</b></div>
+  </div>
+  <div class="steps" id="steps" role="dialog" aria-modal="true" aria-labelledby="stepTitle">
+    <div class="steps-top"><div class="dots" id="dots"></div><button class="btn ghost" data-act="tour-skip">Skip</button></div>
+    <div id="stepBody"></div>
+    <div class="nav"><button class="btn" data-act="tour-back" id="tourBack">Back</button><button class="btn primary" data-act="tour-next" id="tourNext">Next</button></div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="brand"><span class="logo" id="logo"></span><span class="wm">Api<b>Vane</b></span></div>
+  <button class="chip" data-act="engine" aria-haspopup="dialog"><i class="dot browser" id="engineDot"></i><span class="lbl" id="engineLbl">Browser only</span></button>
+  <span class="grow"></span>
+  <button class="save" id="saveBtn" data-act="save" title="Save (Ctrl+S)">Saved</button>
+  <select class="chip" id="envSel" aria-label="Environment"></select>
+  <button class="install" id="installBtn" data-act="install">⤓ <span class="lbl">Install app</span></button>
+  <button class="ibtn" id="themeBtn" data-act="theme" aria-label="Theme"></button>
+</header>
+
+<div class="banner" id="restore" hidden></div>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Main"></nav>
+  <aside class="lib card" id="lib" aria-label="Library">
+    <div class="lib-h"><h2 id="libTitle">Library</h2><span class="lib-actions" id="libActions"></span></div>
+    <div class="lib-b" id="libBody"></div>
+    <div class="lib-f" id="libFoot"></div>
+  </aside>
+  <section class="work">
+    <div class="tabs" role="tablist" id="tabs" aria-label="Open requests"></div>
+    <div class="composer card" id="composer"></div>
+    <div class="panes" id="panes" data-mview="req">
+      <div class="pane req card">
+        <div class="ptabs" role="tablist" id="reqTabs" aria-label="Request"></div>
+        <div class="pbody" id="reqBody"></div>
+      </div>
+      <div class="pane res card">
+        <div class="ptabs" role="tablist" id="resTabs" aria-label="Response"></div>
+        <div class="pbody" id="resBody" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="foot">By <a href="https://github.com/yousafkhamza" target="_blank" rel="noopener">Yousaf Hamza</a> · <a href="https://github.com/yousafkhamza/apivane" target="_blank" rel="noopener">Source (MIT)</a> · Your data stays in this browser</div>
+  </section>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="dh"><h2 id="dlgTitle"></h2><button class="ibtn" data-act="dlg-close" aria-label="Close">✕</button></div>
+  <div class="db" id="dlgBody"></div>
+</dialog>
+<input type="file" id="fileIn" accept=".json,.yaml,.yml,.txt" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

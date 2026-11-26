@@ -1,0 +1,18 @@
+{
+  "name": "apivane-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ApiVane — free API client with tests, security checks, a browser extension and a CI runner.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node scripts/build.mjs && node --test test/*.test.mjs",
+    "e2e": "npx playwright test",
+    "serve": "node scripts/serve.mjs",
+    "agent": "node packages/cli/bin/apivane.js"
+  },
+  "author": "Yousaf Hamza (https://github.com/yousafkhamza)",
+  "license": "MIT"
+}

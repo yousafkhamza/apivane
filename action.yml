@@ -1,0 +1,45 @@
+name: ApiVane API tests
+description: Run an ApiVane collection (.apivane/) with tests and security checks. Writes a job summary and a JUnit report.
+author: Yousaf Hamza
+branding:
+  icon: navigation
+  color: orange
+inputs:
+  dir:
+    description: Collection folder
+    default: .apivane
+  env:
+    description: Environment name (from .apivane/environments/)
+    default: ''
+  folder:
+    description: Only run this folder
+    default: ''
+  fail-on:
+    description: Fail on security findings at or above high | medium | low | none
+    default: high
+  version:
+    description: apivane npm version to use
+    default: latest
+runs:
+  using: composite
+  steps:
+    - name: Run ApiVane
+      shell: bash
+      env:
+        AV_DIR: ${{ inputs.dir }}
+        AV_ENV: ${{ inputs.env }}
+        AV_FOLDER: ${{ inputs.folder }}
+        AV_FAIL_ON: ${{ inputs.fail-on }}
+        AV_VERSION: ${{ inputs.version }}
+      run: |
+        args=(run --dir "$AV_DIR" --reporter cli,junit,markdown --out apivane-reports --fail-on "$AV_FAIL_ON")
+        if [ -n "$AV_ENV" ]; then args+=(--env "$AV_ENV"); fi
+        if [ -n "$AV_FOLDER" ]; then args+=(--folder "$AV_FOLDER"); fi
+        npx --yes "apivane@${AV_VERSION}" "${args[@]}"
+    - name: Upload report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: apivane-reports
+        path: apivane-reports
+        if-no-files-found: ignore

@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f2ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15130f" media="(prefers-color-scheme: dark)">
+<title>ApiVane — design demo</title>
+<script>
+/* apply theme before paint: no flash */
+(function(){var p=localStorage.getItem('apivane.theme')||'system';var d=p==='system'?matchMedia('(prefers-color-scheme: dark)').matches:p==='dark';document.documentElement.dataset.theme=d?'dark':'light';})();
+</script>
+<style>
+:root{
+  --font:"Segoe UI Variable Display","SF Pro Rounded",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --mono:"Cascadia Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:12px;--r-sm:8px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+/* Copper weathervane + verdigris patina */
+[data-theme=light]{
+  --bg:#f6f2ec;--surface:#fffdf9;--sunk:#efe9e0;--line:#e4dccf;--text:#1f1b16;--muted:#6f665a;
+  --copper:#b8592a;--copper-soft:#f5e3d6;--patina:#1f7f6d;--patina-soft:#dbefe9;
+  --bad:#c8402f;--bad-soft:#f8e0dc;--warn:#a86b00;--warn-soft:#f6ead0;--blue:#2c64b8;--violet:#7a4bc4;
+  --shadow:0 1px 2px rgb(60 40 20/.06),0 6px 20px rgb(60 40 20/.06);
+}
+[data-theme=dark]{
+  --bg:#15130f;--surface:#1e1b16;--sunk:#262219;--line:#342e25;--text:#f2ece3;--muted:#a59a8a;
+  --copper:#f08a4b;--copper-soft:#3a2518;--patina:#5fcfb6;--patina-soft:#16322c;
+  --bad:#ff7a66;--bad-soft:#3a1d18;--warn:#f2b84b;--warn-soft:#33280f;--blue:#7fb0ff;--violet:#c4a0ff;
+  --shadow:0 1px 2px rgb(0 0 0/.3),0 8px 24px rgb(0 0 0/.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--font);display:grid;grid-template-rows:auto 1fr;overflow:hidden;transition:background .25s,color .25s}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--copper);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top))}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:-.2px;margin-right:6px}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:var(--copper);color:#fff;display:grid;place-items:center}
+.brand b{color:var(--copper)}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 12px;font-size:13px;white-space:nowrap}
+.chip:hover{border-color:var(--copper)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.dot.browser{background:var(--warn)}.dot.ext,.dot.agent{background:var(--patina);box-shadow:0 0 0 3px var(--patina-soft)}
+.grow{flex:1}
+.ibtn{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);border-radius:10px}
+.ibtn:hover{border-color:var(--copper)}
+.install{background:var(--text);color:var(--bg);border:0;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;display:none;gap:6px;align-items:center}
+.install.show{display:inline-flex}
+select.chip{appearance:none;padding-right:26px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 14px) 52%,calc(100% - 9px) 52%;background-size:5px 5px;background-repeat:no-repeat}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:64px 270px minmax(0,1fr);gap:10px;padding:0 10px 10px;min-height:0}
+.rail{display:flex;flex-direction:column;gap:4px;align-items:center;padding-top:4px}
+.rail button{width:52px;border:0;background:none;border-radius:12px;padding:8px 0 6px;display:grid;justify-items:center;gap:2px;font-size:10.5px;color:var(--muted)}
+.rail button svg{width:20px;height:20px}
+.rail button:hover{background:var(--sunk);color:var(--text)}
+.rail button[aria-current=true]{background:var(--copper-soft);color:var(--copper)}
+.rail .sep{flex:1}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.lib{display:flex;flex-direction:column;min-height:0}
+.lib-h{padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between}
+.lib-h h2{margin:0;font-size:14px}
+.lib-b{overflow:auto;padding:0 8px 10px;flex:1}
+.search{width:100%;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:7px 10px;margin:0 0 6px}
+.grp{font-size:11.5px;font-weight:600;color:var(--muted);padding:10px 8px 4px;display:flex;justify-content:space-between;align-items:center}
+.cors{font-size:10px;font-weight:600;padding:0 6px;border-radius:99px;background:var(--patina-soft);color:var(--patina)}
+.cors.no{background:var(--bad-soft);color:var(--bad)}
+.item{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:7px 8px;border-radius:9px;font-size:13.5px}
+.item:hover{background:var(--sunk)}
+.item[aria-current=true]{background:var(--copper-soft)}
+.item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m{font:700 10px var(--mono);flex:none;min-width:40px;letter-spacing:.3px}
+.m.GET{color:var(--patina)}.m.POST{color:var(--copper)}.m.PUT{color:var(--blue)}.m.PATCH{color:var(--violet)}.m.DELETE{color:var(--bad)}.m.HEAD,.m.OPTIONS{color:var(--muted)}
+.lib-f{border-top:1px solid var(--line);padding:10px;display:grid;gap:6px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-size:13px;display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.btn:hover{border-color:var(--copper)}
+.btn.primary{background:var(--copper);border-color:var(--copper);color:#fff;font-weight:600}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+
+/* ---------- workspace ---------- */
+.work{display:grid;grid-template-rows:auto auto minmax(0,1fr);min-height:0;gap:10px}
+.tabs{display:flex;gap:6px;overflow:auto;scrollbar-width:none}
+.tab{display:flex;gap:6px;align-items:center;border:1px solid transparent;background:none;border-radius:99px;padding:5px 12px;font-size:13px;color:var(--muted);white-space:nowrap}
+.tab[aria-selected=true]{background:var(--surface);border-color:var(--line);color:var(--text);box-shadow:var(--shadow)}
+.tab .x{opacity:.5;font-size:11px}
+.composer{display:flex;gap:8px;padding:8px;align-items:center}
+.methodsel{border:0;border-radius:9px;padding:8px 10px;font:700 12.5px var(--mono);background:var(--sunk)}
+.url{flex:1;min-width:0;position:relative}
+.url input{width:100%;border:0;background:none;padding:8px 6px;font-family:var(--mono);font-size:13.5px}
+.url input:focus{outline:none}
+.composer:focus-within{border-color:var(--copper)}
+.send{background:var(--copper);color:#fff;border:0;border-radius:10px;padding:9px 18px;font-weight:700;display:flex;align-items:center;gap:8px;flex:none}
+.send:disabled{opacity:.7}
+.send kbd{font:11px var(--mono);opacity:.8;background:rgb(255 255 255/.18);padding:1px 5px;border-radius:5px}
+.panes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px;min-height:0}
+.pane{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;overflow:hidden}
+.ptabs{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--line);overflow:auto;scrollbar-width:none;align-items:center}
+.ptabs button{border:0;background:none;border-radius:8px;padding:5px 10px;font-size:13px;color:var(--muted);white-space:nowrap}
+.ptabs button[aria-selected=true]{background:var(--sunk);color:var(--text);font-weight:600}
+.n{font-size:10.5px;font-weight:700;margin-left:4px;padding:0 6px;border-radius:99px;background:var(--sunk);border:1px solid var(--line)}
+.n.good{background:var(--patina-soft);color:var(--patina);border-color:transparent}
+.n.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pbody{overflow:auto;padding:14px;min-height:0}
+table.kv{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+table.kv th{font-weight:600;color:var(--muted);text-align:left;padding:6px 10px;font-size:11.5px;background:var(--sunk)}
+table.kv td{border-top:1px solid var(--line);padding:0}
+table.kv td+td,table.kv th+th{border-left:1px solid var(--line)}
+table.kv input[type=text]{width:100%;border:0;background:none;padding:7px 10px;font-family:var(--mono);font-size:12.5px}
+table.kv td.ck{width:34px;text-align:center}
+input[type=checkbox]{accent-color:var(--copper)}
+textarea.code{width:100%;min-height:180px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:12px;font:12.5px/1.55 var(--mono);resize:vertical}
+.hint{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.var{color:var(--violet);font-family:var(--mono)}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface)}
+.box h3{margin:0 0 6px;font-size:14px}
+.callout{display:flex;gap:10px;font-size:12.5px;padding:9px 12px;border-radius:10px;background:var(--warn-soft);color:var(--text);margin-bottom:12px}
+.callout b{color:var(--warn)}
+
+/* response summary */
+.summary{display:flex;gap:8px;align-items:center;margin-left:auto;padding-left:8px}
+.status{font:700 12.5px var(--mono);padding:3px 10px;border-radius:99px;display:inline-flex;gap:6px;align-items:center}
+.st2{background:var(--patina-soft);color:var(--patina)}.st3{background:var(--sunk);color:var(--blue)}
+.st4,.st5,.sterr{background:var(--bad-soft);color:var(--bad)}
+.metric{font:12px var(--mono);color:var(--muted);white-space:nowrap}
+pre.json{margin:0;font:12.5px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word}
+.jk{color:var(--blue)}.js{color:var(--patina)}.jn{color:var(--copper)}.jb{color:var(--violet)}.jz{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.tag{font:700 10px var(--mono);padding:3px 8px;border-radius:6px;flex:none;min-width:58px;text-align:center;letter-spacing:.4px}
+.t-pass,.t-clean{background:var(--patina-soft);color:var(--patina)}
+.t-fail,.t-high{background:var(--bad-soft);color:var(--bad)}
+.t-medium{background:var(--warn-soft);color:var(--warn)}
+.t-low,.t-info{background:var(--sunk);color:var(--muted)}
+.timing{display:grid;grid-template-columns:120px 1fr 64px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.bar{height:10px;border-radius:5px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px}
+
+/* empty state / sample gallery */
+.hello{max-width:640px}
+.hello h3{margin:0 0 4px;font-size:17px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:14px}
+.sample{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;display:grid;gap:4px;transition:transform .15s var(--ease),border-color .15s}
+.sample:hover{border-color:var(--copper);transform:translateY(-2px)}
+.sample b{font-size:13.5px}
+.sample span{font-size:12px;color:var(--muted)}
+.err h3{color:var(--bad)}
+.err ol{margin:8px 0 0;padding-left:20px}
+.err code{font-family:var(--mono);background:var(--sunk);padding:1px 6px;border-radius:5px}
+.spin{width:14px;height:14px;border:2px solid rgb(255 255 255/.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- dialogs & walkthrough ---------- */
+dialog{border:0;border-radius:18px;background:var(--surface);color:var(--text);padding:0;width:min(560px,94vw);box-shadow:0 20px 60px rgb(0 0 0/.35)}
+dialog::backdrop{background:rgb(20 15 10/.5);backdrop-filter:blur(3px)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 6px}
+.dh h2{margin:0;font-size:17px}
+.db{padding:8px 20px 20px;display:grid;gap:10px}
+.choice{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px}
+.choice:hover{border-color:var(--copper)}
+.choice[aria-pressed=true]{border-color:var(--copper);background:var(--copper-soft)}
+.choice .ic{grid-row:span 2;font-size:22px;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sunk)}
+.choice strong{font-size:14px}
+.choice small{grid-column:2;color:var(--muted);font-size:12.5px}
+.choice .pill{grid-row:1;grid-column:3;font-size:10.5px;font-weight:700;color:var(--patina);background:var(--patina-soft);padding:1px 8px;border-radius:99px}
+.cmd{display:flex;justify-content:space-between;gap:8px;align-items:center;font:12px var(--mono);background:var(--sunk);padding:7px 10px;border-radius:8px;overflow:auto}
+
+.boot{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:20px}
+.boot[hidden]{display:none}
+.splash{display:grid;justify-items:center;gap:14px;animation:fadeout .4s 1.7s forwards}
+.splash svg{width:96px;height:96px;color:var(--copper)}
+.splash .arrow{transform-origin:48px 40px;animation:swing 1.6s var(--ease) both}
+.splash .word{font-size:28px;font-weight:700;letter-spacing:-.5px;opacity:0;animation:up .6s .5s var(--ease) forwards}
+.splash .word b{color:var(--copper)}
+@keyframes swing{0%{transform:rotate(-260deg)}55%{transform:rotate(24deg)}75%{transform:rotate(-9deg)}100%{transform:rotate(0)}}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fadeout{to{opacity:0;visibility:hidden}}
+.steps{width:min(520px,100%);display:none;flex-direction:column;gap:16px;animation:up .45s var(--ease)}
+.steps.on{display:flex}
+.steps-top{display:flex;justify-content:space-between;align-items:center}
+.dots{display:flex;gap:6px}
+.dots i{width:7px;height:7px;border-radius:99px;background:var(--line);transition:width .25s var(--ease),background .25s}
+.dots i.on{width:22px;background:var(--copper)}
+.step{display:none;gap:12px;flex-direction:column}
+.step.on{display:flex;animation:up .4s var(--ease)}
+.step h1{margin:0;font-size:26px;letter-spacing:-.5px;line-height:1.2}
+.step p.lead{margin:0;color:var(--muted);font-size:15px}
+.tips{display:grid;gap:10px}
+.tip{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.tip .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--copper-soft);color:var(--copper);font-weight:700}
+.tip small{display:block;color:var(--muted)}
+.preview{display:flex;gap:8px;margin-top:2px}
+.preview i{flex:1;height:54px;border-radius:10px;border:1px solid var(--line)}
+.nav{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.nav .btn{padding:10px 18px;font-size:14px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,10px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:13px;opacity:0;transition:.2s var(--ease);pointer-events:none;z-index:60}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.foot{font-size:11.5px;color:var(--muted);text-align:center;padding:4px 0 0}
+.foot a{color:inherit}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){ .panes{grid-template-columns:1fr;grid-template-rows:minmax(200px,.9fr) minmax(0,1.1fr)} }
+@media (max-width:980px){ .shell{grid-template-columns:64px minmax(0,1fr)} .lib{display:none} .lib.open{display:flex;position:fixed;left:74px;top:60px;bottom:10px;width:290px;z-index:20} }
+@media (max-width:720px){
+  body{grid-template-rows:auto 1fr auto}
+  .shell{grid-template-columns:1fr;padding:0 8px 8px}
+  .rail{position:fixed;bottom:0;left:0;right:0;flex-direction:row;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px max(6px,env(safe-area-inset-bottom));z-index:30}
+  .rail .sep,.rail .desk{display:none}
+  .shell{padding-bottom:76px}
+  .lib.open{left:8px;right:8px;top:58px;bottom:76px;width:auto}
+  .panes{grid-template-columns:1fr;grid-template-rows:1fr}
+  .panes[data-mview=req] .pane.res,.panes[data-mview=res] .pane.req{display:none}
+  .brand span.wm,.chip .lbl,.send kbd{display:none}
+  .composer{flex-wrap:wrap}.url{flex-basis:100%;order:3}
+  .send{margin-left:auto}
+  .summary{display:none}
+}
+@media (min-width:721px){ .mobile{display:none} }
+</style>
+</head>
+<body>
+
+<!-- ============ first-run walkthrough ============ -->
+<div class="boot" id="boot" hidden>
+  <div class="splash" id="splash" aria-hidden="true">
+    <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 40v44M36 84h24" />
+      <text x="48" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="11" font-weight="700" font-family="system-ui">N</text>
+      <g class="arrow"><path d="M18 40h56M74 40l-10-8M74 40l-10 8M18 40l-7-9M18 40l-7 9M25 40l-7-9M25 40l-7 9"/></g>
+      <circle cx="48" cy="40" r="3.5" fill="currentColor"/>
+    </svg>
+    <div class="word">Api<b>Vane</b></div>
+  </div>
+
+  <div class="steps" id="steps" role="dialog" aria-modal="true" aria-labelledby="stepTitle">
+    <div class="steps-top">
+      <div class="dots" id="dots"></div>
+      <button class="btn ghost" id="skipBtn">Skip</button>
+    </div>
+
+    <section class="step" data-step="0">
+      <h1 id="stepTitle">Test any API,<br>right from your browser.</h1>
+      <p class="lead">Send requests, check the answer, catch security issues, and keep everything in git. Free, no account.</p>
+      <div class="tips">
+        <div class="tip"><span class="ic">↗</span><div><b>Send &amp; inspect</b><small>JSON, headers, timing, cURL export</small></div></div>
+        <div class="tip"><span class="ic">✓</span><div><b>Tests without code</b><small>The same checks run in GitHub Actions</small></div></div>
+        <div class="tip"><span class="ic">⛨</span><div><b>Security checks built in</b><small>Headers, CORS, leaked secrets, unsafe URLs</small></div></div>
+      </div>
+    </section>
+
+    <section class="step" data-step="1">
+      <h1>How should it look?</h1>
+      <p class="lead">By default ApiVane follows your phone or laptop setting. You can change it any time.</p>
+      <div class="tips" id="themeChoices">
+        <button class="choice" data-theme-pick="system"><span class="ic">◐</span><strong>Match my device</strong><small id="sysNow">Currently: light</small></button>
+        <button class="choice" data-theme-pick="light"><span class="ic">☀</span><strong>Light</strong><small>Warm paper tones</small></button>
+        <button class="choice" data-theme-pick="dark"><span class="ic">☾</span><strong>Dark</strong><small>Easy on the eyes at night</small></button>
+      </div>
+    </section>
+
+    <section class="step" data-step="2">
+      <h1>Who sends your requests?</h1>
+      <p class="lead">Browsers block many API calls from websites. Pick how far you want to go — you can switch later from the top bar.</p>
+      <div class="tips" id="engineChoices"></div>
+    </section>
+
+    <section class="step" data-step="3">
+      <h1>Three things to know</h1>
+      <div class="tips">
+        <div class="tip"><span class="ic">1</span><div><b>Pick a request on the left, press Send</b><small><span class="mono">Ctrl + Enter</span> works anywhere · <span class="mono">Ctrl + K</span> to search</small></div></div>
+        <div class="tip"><span class="ic">2</span><div><b>Use <span class="var">{{variables}}</span></b><small>Set them per environment, or capture them from a response (e.g. a login token)</small></div></div>
+        <div class="tip"><span class="ic">3</span><div><b>Check the Tests and Security tabs</b><small>Every response is checked automatically</small></div></div>
+      </div>
+    </section>
+
+    <section class="step" data-step="4">
+      <h1>You're all set.</h1>
+      <p class="lead">Start with a free public API — no keys needed — or open an empty request.</p>
+      <div class="tips">
+        <button class="choice" data-finish="sample"><span class="ic">🌤</span><strong>Try the Dubai weather API</strong><small>Open-Meteo · live wind direction</small></button>
+        <button class="choice" data-finish="login"><span class="ic">🔑</span><strong>Try a login flow</strong><small>DummyJSON · capture a token, reuse it</small></button>
+        <button class="choice" id="bootInstall" hidden><span class="ic">⤓</span><strong>Install ApiVane as an app</strong><small>Opens in its own window, works offline</small></button>
+      </div>
+    </section>
+
+    <div class="nav">
+      <button class="btn" id="backBtn">Back</button>
+      <button class="btn primary" id="nextBtn">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ app ============ -->
+<header class="top">
+  <div class="brand">
+    <span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 10v11M4 10h16M20 10l-3-2.5M20 10l-3 2.5M4 10 2 7.5M4 10l-2 2.5"/></svg></span>
+    <span class="wm">Api<b>Vane</b></span>
+  </div>
+  <button class="chip" id="engineChip" aria-haspopup="dialog"><i class="dot browser" id="engineDot"></i><span id="engineLbl">Browser only</span></button>
+  <span class="grow"></span>
+  <select class="chip" id="env" aria-label="Environment">
+    <option value="public">Public demo</option>
+    <option value="staging">Staging</option>
+    <option value="none">No environment</option>
+  </select>
+  <button class="install" id="installBtn">⤓ <span class="lbl">Install app</span></button>
+  <button class="ibtn" id="themeBtn" aria-label="Theme"></button>
+  <button class="ibtn" id="helpBtn" aria-label="Replay walkthrough" title="Replay walkthrough">?</button>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="Main">
+    <button data-rail="lib" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h6v14H4zM14 5h6v6h-6zM14 15h6v4h-6z"/></svg>Library</button>
+    <button data-rail="env" class="desk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M5 12h14M5 17h9"/></svg>Vars</button>
+    <button data-rail="his" class="desk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>History</button>
+    <button data-rail="req" class="mobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h12M13 7l5 5-5 5"/></svg>Request</button>
+    <button data-rail="res" class="mobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16v12H4zM8 10h8M8 14h5"/></svg>Response</button>
+    <span class="sep"></span>
+    <button data-rail="engine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v4M15 3v4M7 7h10v5a5 5 0 0 1-10 0zM12 17v4"/></svg>Connect</button>
+  </nav>
+
+  <aside class="lib card" id="lib">
+    <div class="lib-h"><h2 id="libTitle">Library</h2><span class="mono muted" id="libSub">.apivane/</span></div>
+    <div class="lib-b" id="libBody"></div>
+    <div class="lib-f">
+      <button class="btn">⇪ Import Postman, OpenAPI or cURL</button>
+      <button class="btn ghost">▶ Run all as CI</button>
+    </div>
+  </aside>
+
+  <section class="work">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="composer card">
+      <select class="methodsel" id="method" aria-label="HTTP method">
+        <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
+      </select>
+      <div class="url"><input id="url" type="text" spellcheck="false" autocomplete="off" aria-label="Request URL"></div>
+      <button class="ibtn" id="curlBtn" title="Copy as cURL" aria-label="Copy as cURL"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg></button>
+      <button class="send" id="sendBtn"><span id="sendLbl">Send</span> <kbd>Ctrl ↵</kbd></button>
+    </div>
+    <div class="panes" id="panes" data-mview="req">
+      <div class="pane req card">
+        <div class="ptabs" role="tablist" id="reqTabs">
+          <button role="tab" data-p="params">Params</button>
+          <button role="tab" data-p="headers">Headers</button>
+          <button role="tab" data-p="body">Body</button>
+          <button role="tab" data-p="auth">Auth</button>
+          <button role="tab" data-p="tests">Tests</button>
+          <button role="tab" data-p="yaml">File</button>
+        </div>
+        <div class="pbody" id="reqBody"></div>
+      </div>
+      <div class="pane res card">
+        <div class="ptabs" role="tablist" id="resTabs">
+          <button role="tab" data-r="body">Response</button>
+          <button role="tab" data-r="headers">Headers</button>
+          <button role="tab" data-r="tests">Tests<span class="n" id="nTests">–</span></button>
+          <button role="tab" data-r="security">Security<span class="n" id="nSec">–</span></button>
+          <button role="tab" data-r="timing">Timing</button>
+          <div class="summary" id="summary"></div>
+        </div>
+        <div class="pbody" id="resBody" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="foot">By <a href="https://github.com/yousafkhamza" target="_blank" rel="noopener">Yousaf Hamza</a> · MIT · Only the requests you send leave this page</div>
+  </section>
+</div>
+
+<dialog id="engineDlg" aria-labelledby="engineDlgT">
+  <div class="dh"><h2 id="engineDlgT">Who sends your requests?</h2><button class="ibtn" data-close aria-label="Close">✕</button></div>
+  <div class="db" id="engineDlgBody"></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get:k=>localStorage.getItem('apivane.'+k), set:(k,v)=>localStorage.setItem('apivane.'+k,v)};
+
+/* ---------- data: free public APIs that allow browser (CORS) calls ---------- */
+const ENVS={
+  public:{jsonph:'https://jsonplaceholder.typicode.com', dummy:'https://dummyjson.com', httpbin:'https://httpbin.org', city_lat:'25.2', city_lon:'55.27'},
+  staging:{jsonph:'https://staging.example.internal', dummy:'https://staging.example.internal', httpbin:'https://httpbin.org', apiKey:{v:'stg-9f2c-secret', secret:true}},
+  none:{}
+};
+const R=(o)=>({params:[],headers:[],auth:'none',tests:[{t:'status',v:200}],...o});
+const REQS=[
+  R({id:1,g:'Weather · Open-Meteo',cors:1,file:'weather/01-dubai-now.yaml',name:'Dubai weather now',method:'GET',url:'https://api.open-meteo.com/v1/forecast',
+    params:[['latitude','{{city_lat}}',1],['longitude','{{city_lon}}',1],['current','temperature_2m,wind_speed_10m,wind_direction_10m',1]],
+    tests:[{t:'status',v:200},{t:'jsonpath',p:'$.current.wind_direction_10m'},{t:'header',h:'content-type',c:'application/json'},{t:'time',v:1500}],
+    blurb:'Live wind direction — no key needed'}),
+  R({id:2,g:'Auth flow · DummyJSON',cors:1,file:'auth/01-login.yaml',name:'Log in',method:'POST',url:'{{dummy}}/auth/login',
+    headers:[['Content-Type','application/json',1]],body:'{\n  "username": "emilys",\n  "password": "emilyspass",\n  "expiresInMins": 30\n}',
+    tests:[{t:'status',v:200},{t:'jsonpath',p:'$.accessToken'}],capture:{token:'$.accessToken'},blurb:'Get a token, captured into {{token}}'}),
+  R({id:3,g:'Auth flow · DummyJSON',cors:1,file:'auth/02-me.yaml',name:'Who am I',method:'GET',url:'{{dummy}}/auth/me',auth:'bearer',
+    headers:[['Authorization','Bearer {{token}}',1]],tests:[{t:'status',v:200},{t:'jsonpath',p:'$.username'}],blurb:'Uses the captured token'}),
+  R({id:4,g:'Fake REST · JSONPlaceholder',cors:1,file:'posts/01-list.yaml',name:'List posts',method:'GET',url:'{{jsonph}}/posts',params:[['_limit','3',1]],
+    tests:[{t:'status',v:200},{t:'jsonpath',p:'$[0].id'},{t:'time',v:1200}],blurb:'Classic fake REST API'}),
+  R({id:5,g:'Fake REST · JSONPlaceholder',cors:1,file:'posts/02-create.yaml',name:'Create post',method:'POST',url:'{{jsonph}}/posts',
+    headers:[['Content-Type','application/json',1]],body:'{\n  "title": "Hello from ApiVane",\n  "body": "Testing a POST",\n  "userId": 1\n}',
+    tests:[{t:'status',v:201},{t:'jsonpath',p:'$.id'}],capture:{postId:'$.id'},blurb:'POST with a JSON body'}),
+  R({id:6,g:'Open data',cors:1,file:'open/countries-uae.yaml',name:'Country: UAE',method:'GET',url:'https://restcountries.com/v3.1/alpha/ae',params:[['fields','name,capital,population,currencies',1]],
+    tests:[{t:'status',v:200},{t:'jsonpath',p:'$.capital'}],blurb:'REST Countries'}),
+  R({id:7,g:'Open data',cors:1,file:'open/pokemon.yaml',name:'Pokémon: Pikachu',method:'GET',url:'https://pokeapi.co/api/v2/pokemon/pikachu',
+    tests:[{t:'status',v:200},{t:'jsonpath',p:'$.name'},{t:'time',v:800}],blurb:'Big JSON — try search & timing'}),
+  R({id:8,g:'Learn the limits',cors:1,file:'learn/echo-headers.yaml',name:'Key in query string',method:'GET',url:'{{httpbin}}/get',params:[['api_key','demo-123',1]],headers:[['X-Trace','apivane',1]],
+    blurb:'Triggers a security finding'}),
+  R({id:9,g:'Learn the limits',cors:1,file:'learn/server-error.yaml',name:'Server error 500',method:'GET',url:'{{httpbin}}/status/500',blurb:'See a failing test'}),
+  R({id:10,g:'Learn the limits',cors:0,file:'learn/no-cors.yaml',name:'API without CORS',method:'GET',url:'https://example.com/',blurb:'Blocked in browser — see the fix'}),
+];
+const ENGINES={
+  browser:{ic:'🌐',name:'Browser only',dot:'browser',desc:'Nothing to install. Works with public APIs that allow it (like the samples). Some headers stay hidden.'},
+  ext:{ic:'🧩',name:'Browser extension',dot:'ext',pill:'Best for this site',desc:'Chrome, Edge, Firefox. No CORS limit, all headers visible. You approve each site once.',cmd:['Chrome Web Store · Firefox Add-ons','soon']},
+  agent:{ic:'⌘',name:'Local agent',dot:'agent',desc:'Saves collections as files in your repo and runs them in CI. Localhost only, token-protected.',cmd:['npx apivane','copy']},
+};
+const S={engine:LS.get('engine')||'browser',env:'public',open:[1,2],active:1,lib:'lib',reqTab:'params',resTab:'body',res:{},caps:{},hist:[],mview:'req'};
+
+/* ---------- theme (follows device unless pinned) ---------- */
+const mq=matchMedia('(prefers-color-scheme: dark)');
+const THEME_IC={system:'◐',light:'☀',dark:'☾'};
+function applyTheme(){
+  const p=LS.get('theme')||'system', dark=p==='system'?mq.matches:p==='dark';
+  document.documentElement.dataset.theme=dark?'dark':'light';
+  $('#themeBtn').textContent=THEME_IC[p]; $('#themeBtn').title='Theme: '+(p==='system'?'match device':p);
+  $('#sysNow').textContent='Currently: '+(mq.matches?'dark':'light');
+  $$('[data-theme-pick]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themePick===p));
+}
+mq.addEventListener('change',applyTheme);
+$('#themeBtn').onclick=()=>{const o=['system','light','dark'],p=LS.get('theme')||'system';LS.set('theme',o[(o.indexOf(p)+1)%3]);applyTheme();toast('Theme: '+($('#themeBtn').title.split(': ')[1]));};
+
+/* ---------- helpers ---------- */
+const vars=()=>{const e=ENVS[S.env]||{},o={};for(const k in e)o[k]=typeof e[k]==='object'?e[k].v:e[k];return{...o,...S.caps};};
+const secrets=()=>[...Object.values(ENVS[S.env]||{}).filter(v=>typeof v==='object').map(v=>v.v),...Object.entries(S.caps).filter(([k])=>/token|key|secret/i.test(k)).map(([,v])=>String(v))].filter(Boolean);
+const interp=s=>String(s).replace(/\{\{(\w+)\}\}/g,(m,k)=>vars()[k]??m);
+const mask=s=>secrets().reduce((a,v)=>a.split(v).join('••••••'),String(s));
+const cur=()=>REQS.find(r=>r.id===S.active);
+const resOf=()=>S.res[S.active];
+function fullUrl(r){const u=interp(r.url),q=r.params.filter(p=>p[2]&&p[0]).map(p=>encodeURIComponent(p[0])+'='+encodeURIComponent(interp(p[1]))).join('&');return q?u+(u.includes('?')?'&':'?')+q:u;}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1700);}
+const kb=n=>n<1024?n+' B':(n/1024).toFixed(1)+' KB';
+const copy=(txt,msg)=>navigator.clipboard.writeText(txt).then(()=>toast(msg||'Copied'),()=>toast('Copy blocked by browser'));
+
+/* ---------- engine ---------- */
+function engineChoices(target,onPick){
+  target.innerHTML=Object.entries(ENGINES).map(([k,e])=>`<button class="choice" data-engine="${k}" aria-pressed="${S.engine===k}"><span class="ic">${e.ic}</span><strong>${e.name}</strong>${e.pill?`<span class="pill">${e.pill}</span>`:''}<small>${e.desc}</small></button>`+
+    (e.cmd&&S.engine===k?`<div class="cmd"><span>${e.cmd[0]}</span>${e.cmd[1]==='copy'?`<button class="btn" data-copy="${e.cmd[0]}">Copy</button>`:'<span class="muted">coming soon</span>'}</div>`:'')).join('')+
+    (target.id==='engineDlgBody'?'<p class="hint">Demo note: Extension and Local agent are simulated here — requests still go through the browser.</p>':'');
+  target.querySelectorAll('[data-engine]').forEach(b=>b.onclick=()=>{setEngine(b.dataset.engine);engineChoices(target,onPick);onPick&&onPick();});
+}
+function setEngine(k){S.engine=k;LS.set('engine',k);const e=ENGINES[k];$('#engineDot').className='dot '+e.dot;$('#engineLbl').textContent=k==='browser'?'Browser only':e.name+' · connected';render();}
+function openEngine(){engineChoices($('#engineDlgBody'));$('#engineDlg').showModal();}
+
+/* ---------- library ---------- */
+function renderLib(){
+  const el=$('#libBody');
+  $$('.rail button[data-rail]').forEach(b=>b.setAttribute('aria-current',b.dataset.rail===S.lib||(b.dataset.rail===S.mview&&innerWidth<=720)));
+  if(S.lib==='lib'){
+    $('#libTitle').textContent='Library';$('#libSub').textContent='.apivane/';
+    const groups=[...new Set(REQS.map(r=>r.g))];
+    el.innerHTML='<input class="search" type="search" placeholder="Search  ·  Ctrl K" aria-label="Search requests">'+groups.map(g=>{const rs=REQS.filter(r=>r.g===g);
+      return `<div class="grp"><span>${esc(g)}</span>${rs[0].cors?'<span class="cors" title="Works in browser-only mode">CORS ✓</span>':'<span class="cors no">needs extension</span>'}</div>`+
+      rs.map(r=>`<button class="item" data-id="${r.id}" aria-current="${r.id===S.active}"><span class="m ${r.method}">${r.method}</span><span class="nm">${esc(r.name)}</span>${S.res[r.id]?.status?`<span class="dot ${S.res[r.id].status<400?'ext':'browser'}"></span>`:''}</button>`).join('');}).join('');
+    el.querySelector('.search').oninput=e=>{const q=e.target.value.toLowerCase();el.querySelectorAll('.item').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'':'none');};
+  }else if(S.lib==='env'){
+    const e=ENVS[S.env]||{};$('#libTitle').textContent='Variables';$('#libSub').textContent=$('#env').selectedOptions[0].text;
+    const rows=[...Object.entries(e).map(([k,v])=>[k,typeof v==='object'?'•••••• 🔒':v,'env']),...Object.entries(S.caps).map(([k,v])=>[k,/token|key|secret/i.test(k)?'•••••• 🔒':v,'captured'])];
+    el.innerHTML=`<table class="kv"><tr><th>Name</th><th>Value</th></tr>${rows.map(r=>`<tr><td><input type="text" value="${esc(r[0])}" readonly title="${r[2]}"></td><td><input type="text" value="${esc(r[1])}" readonly></td></tr>`).join('')}</table>
+      <p class="hint">🔒 Secrets are masked in the UI, history, cURL and reports. In git they're stored as <span class="mono">\${env:NAME}</span> — never the real value.</p>`;
+  }else{
+    $('#libTitle').textContent='History';$('#libSub').textContent='this browser only';
+    el.innerHTML=S.hist.length?S.hist.map(h=>`<button class="item" data-id="${h.id}"><span class="m ${h.method}">${h.method}</span><span class="nm mono" style="font-size:12px">${esc(h.url.replace(/^https?:\/\//,''))}</span><span class="mono muted">${h.status}</span></button>`).join(''):'<p class="hint" style="text-align:center;padding:30px 10px">Nothing yet. Your last 100 requests appear here and never leave this browser.</p>';
+  }
+  el.querySelectorAll('.item[data-id]').forEach(b=>b.onclick=()=>openReq(+b.dataset.id));
+}
+function openReq(id){if(!S.open.includes(id))S.open.push(id);S.active=id;S.mview='req';$('#lib').classList.remove('open');render();}
+
+/* ---------- request ---------- */
+function renderTabs(){
+  $('#tabs').innerHTML=S.open.map(id=>{const r=REQS.find(x=>x.id===id);return `<button class="tab" role="tab" data-id="${id}" aria-selected="${id===S.active}"><span class="m ${r.method}" style="min-width:0">${r.method}</span>${esc(r.name)}${S.open.length>1?`<span class="x" data-closetab="${id}" aria-label="Close tab">✕</span>`:''}</button>`;}).join('');
+  $$('#tabs .tab').forEach(b=>b.onclick=e=>{const c=e.target.dataset.closetab;if(c){S.open=S.open.filter(x=>x!=+c);if(S.active==+c)S.active=S.open[S.open.length-1];}else S.active=+b.dataset.id;render();});
+}
+function kv(rows,key){
+  return `<table class="kv"><tr><th></th><th>Key</th><th>Value</th></tr>${rows.map((r,i)=>`<tr><td class="ck"><input type="checkbox" ${r[2]?'checked':''} data-k="${key}" data-i="${i}" aria-label="Enable ${esc(r[0])}"></td><td><input type="text" value="${esc(r[0])}" data-k="${key}" data-i="${i}" data-c="0" aria-label="Key"></td><td><input type="text" value="${esc(r[1])}" data-k="${key}" data-i="${i}" data-c="1" aria-label="Value"></td></tr>`).join('')}
+    <tr><td class="ck"></td><td><input type="text" placeholder="Add key" data-add="${key}" aria-label="New key"></td><td><input type="text" placeholder="Value" disabled></td></tr></table>`;
+}
+const tLabel=x=>x.t==='status'?`status is ${x.v}`:x.t==='jsonpath'?`${x.p} exists`:x.t==='header'?`${x.h} contains "${x.c}"`:`faster than ${x.v} ms`;
+function renderReq(){
+  const r=cur(),el=$('#reqBody');$('#method').value=r.method;$('#url').value=r.url;
+  $$('#reqTabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===S.reqTab));
+  const t=S.reqTab,noBody=['GET','HEAD'].includes(r.method);
+  if(t==='params')el.innerHTML=kv(r.params,'params')+`<p class="hint">Sends to <span class="mono">${esc(mask(fullUrl(r)))}</span></p>`+(r.blurb?`<p class="hint">💡 ${esc(r.blurb)}</p>`:'');
+  else if(t==='headers')el.innerHTML=kv(r.headers,'headers')+(S.engine==='browser'?'<p class="hint">In browser-only mode the browser controls <span class="mono">Cookie</span>, <span class="mono">Host</span>, <span class="mono">Origin</span> and <span class="mono">User-Agent</span>.</p>':'');
+  else if(t==='body')el.innerHTML=noBody?`<p class="hint">${r.method} requests don't have a body. Switch the method to POST, PUT or PATCH.</p>`:`<textarea class="code" id="bodyTa" spellcheck="false" aria-label="JSON body">${esc(r.body||'')}</textarea><p class="hint">JSON · form · multipart · text</p>`;
+  else if(t==='auth')el.innerHTML=`<div class="box"><h3>${{none:'No auth',bearer:'Bearer token',inherit:'Inherit from collection'}[r.auth]}</h3><p class="muted" style="margin:0">Also: Basic, API key (header or query), OAuth2 client credentials.</p>${r.auth==='bearer'?`<p class="mono">Authorization: Bearer ${S.caps.token?'••••••':'<span class="var">{{token}}</span> <span class="muted">— run “Log in” first</span>'}</p>`:''}</div>`;
+  else if(t==='tests')el.innerHTML=`<div class="box"><h3>Checks after every send</h3>${r.tests.map(x=>`<div class="mono" style="padding:3px 0">✓ ${esc(tLabel(x))}</div>`).join('')}${r.capture?'<h3 style="margin-top:12px">Save from response</h3>'+Object.entries(r.capture).map(([k,v])=>`<div class="mono">→ <span class="var">{{${k}}}</span> = ${v}</div>`).join(''):''}</div><p class="hint">No scripting. The same checks run in CI with <span class="mono">npx apivane run</span>.</p>`;
+  else el.innerHTML=`<p class="hint" style="margin:0 0 8px">Saved as <span class="mono">.apivane/requests/${r.file}</span> — one file per request, so pull requests show clean diffs.</p><pre class="json box">${esc(toYaml(r))}</pre>`;
+  el.querySelectorAll('input[data-k]').forEach(i=>i.addEventListener(i.type==='checkbox'?'change':'input',()=>{const row=r[i.dataset.k][+i.dataset.i];if(i.type==='checkbox')row[2]=i.checked;else row[+i.dataset.c]=i.value;if(S.reqTab==='params'&&i.type==='checkbox')renderReq();}));
+  el.querySelectorAll('input[data-add]').forEach(i=>i.onchange=()=>{if(i.value.trim()){r[i.dataset.add].push([i.value.trim(),'',1]);renderReq();}});
+  const ta=$('#bodyTa');if(ta)ta.oninput=()=>r.body=ta.value;
+}
+function toYaml(r){
+  let y=`name: ${r.name}\nmethod: ${r.method}\nurl: "${r.url}"\n`;
+  if(r.params.length)y+='query:\n'+r.params.map(p=>`  ${p[0]}: "${p[1]}"`).join('\n')+'\n';
+  if(r.headers.length)y+='headers:\n'+r.headers.map(h=>`  ${h[0]}: "${h[1]}"`).join('\n')+'\n';
+  if(r.body)y+='body:\n  type: json\n  content: '+r.body.replace(/\n\s*/g,' ')+'\n';
+  y+=`auth: ${r.auth}\ntests:\n`+r.tests.map(x=>x.t==='status'?`  - status: ${x.v}`:x.t==='jsonpath'?`  - jsonpath: "${x.p}"\n    exists: true`:x.t==='header'?`  - header: ${x.h}\n    contains: ${x.c}`:`  - maxDurationMs: ${x.v}`).join('\n')+'\n';
+  if(r.capture)y+='capture:\n'+Object.entries(r.capture).map(([k,v])=>`  ${k}: "${v}"`).join('\n')+'\n';
+  return y+'security: default\n';
+}
+function curl(r){let c=`curl -X ${r.method} '${mask(fullUrl(r))}'`;r.headers.filter(h=>h[2]).forEach(h=>c+=` \\\n  -H '${h[0]}: ${mask(interp(h[1]))}'`);if(r.body&&!['GET','HEAD'].includes(r.method))c+=` \\\n  --data '${r.body.replace(/'/g,"'\\''")}'`;return c;}
+
+/* ---------- send ---------- */
+async function send(){
+  const r=cur();if($('#sendBtn').disabled)return;r.method=$('#method').value;r.url=$('#url').value.trim();
+  const url=fullUrl(r);let res;
+  const miss=(url+r.headers.filter(h=>h[2]).map(h=>h[1]).join('')).match(/\{\{\w+\}\}/g);
+  if(miss)res={error:'var',miss:[...new Set(miss)]};
+  else if(!/^https?:\/\/[^\s]+$/i.test(url))res={error:'url'};
+  else{
+    const b=$('#sendBtn');b.disabled=true;$('#sendLbl').innerHTML='<span class="spin"></span>';
+    const h={};r.headers.filter(x=>x[2]&&x[0]).forEach(x=>h[x[0]]=interp(x[1]));
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),30000),t0=performance.now();
+    try{
+      const resp=await fetch(url,{method:r.method,headers:h,body:['GET','HEAD'].includes(r.method)?undefined:interp(r.body||''),signal:ctl.signal});
+      const t1=performance.now(),text=await resp.text(),t2=performance.now(),hd={};resp.headers.forEach((v,k)=>hd[k]=v);
+      let json=null;try{json=JSON.parse(text)}catch{}
+      res={status:resp.status,statusText:resp.statusText,headers:hd,text,json,ms:Math.round(t2-t0),ttfb:Math.round(t1-t0),size:new Blob([text]).size,url};
+      if(r.capture&&json)for(const[k,p]of Object.entries(r.capture)){const v=jp(json,p);if(v!==undefined){S.caps[k]=v;toast(`Saved {{${k}}} from response`);}}
+      res.tests=runTests(r,res);res.sec=runSec(r,res);
+    }catch(e){res={error:e.name==='AbortError'?'timeout':'net',insecure:location.protocol==='https:'&&url.startsWith('http:'),local:/\/\/(localhost|127\.|10\.|192\.168\.)/.test(url)};}
+    finally{clearTimeout(tm);b.disabled=false;$('#sendLbl').textContent='Send';}
+    S.hist.unshift({id:r.id,method:r.method,url:mask(url),status:res.status||'ERR'});S.hist.length=Math.min(S.hist.length,100);
+  }
+  S.res[r.id]=res;S.resTab='body';S.mview='res';render();
+}
+function jp(o,p){return p.replace(/^\$\.?/,'').split(/\.|\[(\d+)\]/).filter(Boolean).reduce((a,k)=>a==null?undefined:a[k],o);}
+function runTests(r,res){return r.tests.map(x=>{
+  if(x.t==='status')return{n:tLabel(x),ok:res.status===x.v,got:res.status};
+  if(x.t==='jsonpath'){const v=res.json?jp(res.json,x.p):undefined;return{n:tLabel(x),ok:v!==undefined,got:v===undefined?'missing':JSON.stringify(v).slice(0,40)};}
+  if(x.t==='header'){const v=res.headers[x.h];return{n:tLabel(x),ok:!!v&&v.includes(x.c),got:v||'hidden by browser'};}
+  return{n:tLabel(x),ok:res.ms<x.v,got:res.ms+' ms'};});}
+function runSec(r,res){
+  const f=[],h=res.headers,lim=S.engine==='browser';
+  if(!lim){if(!h['strict-transport-security'])f.push(['SEC001','medium','No Strict-Transport-Security header','Add HSTS: max-age=31536000; includeSubDomains']);if(!h['x-content-type-options'])f.push(['SEC001','low','No X-Content-Type-Options header','Send X-Content-Type-Options: nosniff']);}
+  if(h['access-control-allow-origin']==='*'&&h['access-control-allow-credentials']==='true')f.push(['SEC002','high','CORS allows any site with credentials','Allow a list of known origins instead of *']);
+  if(/AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY/.test(res.text))f.push(['SEC003','high','Secret key in response body','Never return credentials in API responses']);
+  else if(/eyJ[\w-]{10,}\.[\w-]{10,}\./.test(res.text))f.push(['SEC003','info','Token in response body','Expected on login endpoints — make sure it is not on others']);
+  if(/at [\w.$<>]+ \(.*:\d+:\d+\)|Traceback \(most recent|Exception in thread/.test(res.text))f.push(['SEC005','medium','Stack trace in response','Return a generic error message in production']);
+  if(res.url.startsWith('http:')&&!/\/\/(localhost|127\.)/.test(res.url))f.push(['SEC007','high','Plain http:// URL','Use https://']);
+  const q=r.params.filter(p=>p[2]).map(p=>p[0]).find(k=>/token|key|secret|pass/i.test(k));if(q)f.push(['SEC008','medium',`Secret-looking “${q}” in the URL`,'Send it in a header — URLs end up in logs and browser history']);
+  return{f,lim};
+}
+
+/* ---------- response ---------- */
+function hl(v){return esc(JSON.stringify(v,null,2)).replace(/(&quot;(?:\\.|[^&\\]|&(?!quot;))*?&quot;)(\s*:)?|\b(true|false)\b|\bnull\b|-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g,(m,s,c,b)=>s?(c?`<span class="jk">${s}</span>${c}`:`<span class="js">${s}</span>`):b?`<span class="jb">${m}</span>`:m==='null'?`<span class="jz">${m}</span>`:`<span class="jn">${m}</span>`);}
+function samplesGallery(){return `<div class="hello"><h3>Pick a free API to try</h3><p class="muted" style="margin:0">No keys, no sign-up. Each one shows a different feature.</p><div class="gallery">${REQS.filter(r=>r.blurb).map(r=>`<button class="sample" data-id="${r.id}"><b><span class="m ${r.method}">${r.method}</span> ${esc(r.name)}</b><span>${esc(r.blurb)}</span></button>`).join('')}</div></div>`;}
+function renderRes(){
+  const el=$('#resBody'),res=resOf(),sum=$('#summary');
+  $$('#resTabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.r===S.resTab));
+  const nT=$('#nTests'),nS=$('#nSec');
+  if(!res){sum.innerHTML='';nT.textContent=nS.textContent='–';nT.className=nS.className='n';
+    el.innerHTML=`<div style="text-align:center;padding:18px 0 4px"><b>Press Send</b> <span class="muted">or</span> <span class="mono">Ctrl + Enter</span></div>`+samplesGallery();
+    el.querySelectorAll('.sample').forEach(b=>b.onclick=()=>openReq(+b.dataset.id));return;}
+  if(res.error){sum.innerHTML='<span class="status sterr">Not sent</span>';nT.textContent=nS.textContent='–';nT.className=nS.className='n';el.innerHTML=errCard(res);return;}
+  const ok=res.tests.filter(t=>t.ok).length;nT.textContent=`${ok}/${res.tests.length}`;nT.className='n '+(ok===res.tests.length?'good':'bad');
+  nS.textContent=res.sec.f.length;nS.className='n '+(res.sec.f.some(f=>f[1]==='high'||f[1]==='medium')?'bad':'good');
+  sum.innerHTML=`<span class="status st${String(res.status)[0]}">${res.status} ${esc(res.statusText||'')}</span><span class="metric">${res.ms} ms</span><span class="metric">${kb(res.size)}</span>`;
+  const t=S.resTab,mob=innerWidth<=720?`<p style="margin:0 0 10px"><span class="status st${String(res.status)[0]}">${res.status}</span> <span class="metric">${res.ms} ms · ${kb(res.size)}</span></p>`:'';
+  if(t==='body')el.innerHTML=mob+(res.json!==null?`<pre class="json">${hl(res.json)}</pre>`:res.text?`<pre class="json">${esc(res.text.slice(0,20000))}</pre>`:'<p class="hint">Empty body.</p>');
+  else if(t==='headers')el.innerHTML=(S.engine==='browser'?'<div class="callout"><b>!</b><span>The browser only shows headers the API chooses to share. Connect the extension to see all of them.</span></div>':'')+`<table class="kv"><tr><th>Header</th><th>Value</th></tr>${Object.entries(res.headers).map(([k,v])=>`<tr><td><input type="text" value="${esc(k)}" readonly></td><td><input type="text" value="${esc(v)}" readonly></td></tr>`).join('')}</table>`;
+  else if(t==='tests')el.innerHTML=res.tests.map(x=>`<div class="row"><span class="tag ${x.ok?'t-pass':'t-fail'}">${x.ok?'PASS':'FAIL'}</span><span style="flex:1">${esc(x.n)}</span><span class="mono muted">${esc(x.got)}</span></div>`).join('');
+  else if(t==='security')el.innerHTML=(res.sec.lim?'<div class="callout"><b>!</b><span>Header checks were skipped — the browser hides most headers. <a href="#" data-engine-open style="color:inherit;font-weight:600">Connect the extension</a> for a full scan.</span></div>':'')+(res.sec.f.length?res.sec.f.map(f=>`<div class="row"><span class="tag t-${f[1]}">${f[1].toUpperCase()}</span><div style="flex:1"><div>${esc(f[2])} <span class="mono muted">${f[0]}</span></div><div class="muted" style="font-size:12.5px">Fix: ${esc(f[3])}</div></div></div>`).join(''):'<div class="row"><span class="tag t-clean">CLEAN</span><span>No problems found by the checks that ran.</span></div>');
+  else{const T=res.ms,bar=(l,v,c)=>`<div class="timing"><span class="muted">${l}</span><div class="bar"><i style="width:${Math.max(2,v/T*100)}%;background:${c}"></i></div><span class="mono">${v} ms</span></div>`;
+    el.innerHTML=bar('Waiting',res.ttfb,'var(--blue)')+bar('Download',T-res.ttfb,'var(--patina)')+bar('Total',T,'var(--copper)')+'<p class="hint">With the local agent you also get DNS, connect and TLS times.</p>';}
+}
+function errCard(res){
+  if(res.error==='var')return `<div class="box err"><h3>A variable has no value</h3><p>${res.miss.map(m=>`<span class="var">${esc(m)}</span>`).join(', ')} is empty in <b>${esc($('#env').selectedOptions[0].text)}</b>.</p>${res.miss.includes('{{token}}')?'<p>👉 Run <a href="#" data-id="2" class="open-req" style="color:var(--copper);font-weight:600">Log in</a> first — it saves the token for you.</p>':'<p class="muted">Add it under Vars, or switch environment.</p>'}</div>`;
+  if(res.error==='url')return '<div class="box err"><h3>That URL doesn\'t look right</h3><p class="muted">It should start with <span class="mono">https://</span></p></div>';
+  if(res.error==='timeout')return '<div class="box err"><h3>No answer after 30 seconds</h3><p class="muted">The server may be down or slow. Check the URL and try again.</p></div>';
+  const why=res.insecure?'This page is secure (https), so the browser blocks plain <code>http://</code> calls.':res.local?'Websites aren\'t allowed to call <code>localhost</code> or private-network APIs.':'The API didn\'t allow calls from websites (<b>CORS</b>). The browser hides the exact reason, so it could also be a typo, DNS or an expired certificate.';
+  return `<div class="box err"><h3>The browser blocked this request</h3><p>${why}</p>${S.engine==='browser'?`<p><b>Fix it in one step:</b></p><ol><li><a href="#" data-engine-open style="color:var(--copper);font-weight:600">Add the ApiVane extension</a> (Chrome, Edge, Firefox)</li><li>or run <code>npx apivane</code> on your computer</li><li>or <a href="#" data-curl style="color:var(--copper);font-weight:600">copy as cURL</a> and run it in a terminal</li></ol>`:'<p class="muted">Demo: extension and agent are simulated, so this still went through the browser.</p>'}</div>`;
+}
+
+/* ---------- walkthrough ---------- */
+const STEPS=5;let step=0;
+function boot(force){
+  $('#boot').hidden=false;$('#splash').style.display='';$('#steps').classList.remove('on');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(()=>{$('#splash').style.display='none';$('#steps').classList.add('on');goStep(0);},reduce?0:2000);
+}
+function goStep(i){
+  step=i;$$('.step').forEach(s=>s.classList.toggle('on',+s.dataset.step===i));
+  $('#dots').innerHTML=Array.from({length:STEPS},(_,k)=>`<i class="${k===i?'on':''}"></i>`).join('');
+  $('#backBtn').style.visibility=i?'visible':'hidden';$('#nextBtn').textContent=i===STEPS-1?'Start empty':i?'Next':'Get started';
+  $('#skipBtn').style.visibility=i===STEPS-1?'hidden':'visible';
+  if(i===2)engineChoices($('#engineChoices'));
+  $('#bootInstall').hidden=!deferredInstall;
+  applyTheme();$('.step.on h1')?.focus?.();
+}
+function finish(openId){LS.set('onboarded','1');$('#boot').hidden=true;if(openId)openReq(openId);else render();}
+$('#nextBtn').onclick=()=>step<STEPS-1?goStep(step+1):finish();
+$('#backBtn').onclick=()=>goStep(Math.max(0,step-1));
+$('#skipBtn').onclick=()=>finish();
+$$('[data-theme-pick]').forEach(b=>b.onclick=()=>{LS.set('theme',b.dataset.themePick);applyTheme();});
+$$('[data-finish]').forEach(b=>b.onclick=()=>finish(b.dataset.finish==='login'?2:1));
+$('#helpBtn').onclick=()=>boot(true);
+
+/* ---------- install as app (PWA) ---------- */
+let deferredInstall=null;
+const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();if(standalone)return;deferredInstall=e;$('#installBtn').classList.add('show');});
+addEventListener('appinstalled',()=>{deferredInstall=null;$('#installBtn').classList.remove('show');toast('ApiVane installed');});
+async function install(){if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;$('#installBtn').classList.remove('show');$('#bootInstall').hidden=true;}
+$('#installBtn').onclick=install;$('#bootInstall').onclick=install;
+if(!standalone&&/iphone|ipad/i.test(navigator.userAgent)&&!LS.get('iosHint')){setTimeout(()=>{toast('Install: tap Share → Add to Home Screen');LS.set('iosHint','1');},4000);}
+
+/* ---------- wiring ---------- */
+function render(){renderLib();renderTabs();renderReq();renderRes();$('#panes').dataset.mview=S.mview;}
+$$('.rail button').forEach(b=>b.onclick=()=>{const k=b.dataset.rail;
+  if(k==='engine')return openEngine();
+  if(k==='req'||k==='res'){S.mview=k;$('#lib').classList.remove('open');return render();}
+  const l=$('#lib');if(S.lib===k&&getComputedStyle(l).position==='fixed')l.classList.toggle('open');else{S.lib=k;if(innerWidth<=980)l.classList.add('open');}renderLib();});
+$('#engineChip').onclick=openEngine;
+$('#env').onchange=e=>{S.env=e.target.value;render();};
+$$('#reqTabs button').forEach(b=>b.onclick=()=>{S.reqTab=b.dataset.p;renderReq();});
+$$('#resTabs button').forEach(b=>b.onclick=()=>{S.resTab=b.dataset.r;renderRes();});
+$('#sendBtn').onclick=send;
+$('#method').onchange=e=>{cur().method=e.target.value;renderTabs();renderReq();};
+$('#url').oninput=e=>cur().url=e.target.value;
+$('#url').onkeydown=e=>{if(e.key==='Enter')send();};
+$('#curlBtn').onclick=()=>copy(curl(cur()),'cURL copied — secrets masked');
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('[data-close]'))t.closest('dialog').close();
+  if(t.closest('[data-engine-open]')){e.preventDefault();openEngine();}
+  if(t.closest('[data-curl]')){e.preventDefault();$('#curlBtn').click();}
+  if(t.closest('.open-req')){e.preventDefault();openReq(+t.closest('.open-req').dataset.id);}
+  const c=t.closest('[data-copy]');if(c)copy(c.dataset.copy);
+  const l=$('#lib');if(l.classList.contains('open')&&!t.closest('#lib')&&!t.closest('.rail'))l.classList.remove('open');
+});
+$('#engineDlg').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close();});
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();send();}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();S.lib='lib';if(innerWidth<=980)$('#lib').classList.add('open');renderLib();$('.search')?.focus();}
+  if(e.key==='Escape'&&!$('#boot').hidden)finish();
+});
+addEventListener('resize',()=>renderLib());
+
+applyTheme();setEngine(S.engine);
+/* first visit only (or when replayed from “?”) — never on later visits or inside the installed app after onboarding */
+if(!LS.get('onboarded'))boot();
+</script>
+</body>
+</html>

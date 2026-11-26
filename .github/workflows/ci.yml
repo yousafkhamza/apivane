@@ -1,0 +1,121 @@
+name: CI and Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Repo variable SITE_URL is only needed for a custom domain; default is https://<owner>.github.io/<repo>/
+  SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+  PLAYWRIGHT_VERSION: 1.49.1
+
+jobs:
+  test:
+    name: unit tests, build, checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Build (no dependencies to install)
+        run: npm run build
+      - name: Static checks (imports, CSP, files, versions)
+        run: npm run check
+      - name: Unit, agent and runner tests
+        run: npm test
+      - name: CLI smoke test
+        run: |
+          node packages/cli/bin/apivane.js --version
+          node packages/cli/bin/apivane.js --help
+          cd "$(mktemp -d)" && node "$GITHUB_WORKSPACE/packages/cli/bin/apivane.js" init && test -f .apivane/apivane.yaml
+      - name: Upload extension packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: dist-ext/*.zip
+          retention-days: 14
+      - name: Upload Pages site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  e2e:
+    name: browser tests (${{ matrix.project }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, mobile, firefox]
+    # Firefox is reported but does not block deploys; check it before each release.
+    continue-on-error: ${{ matrix.project == 'firefox' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm run build
+        env:
+          SITE_URL: http://127.0.0.1:4173/
+      - name: Install Playwright (pinned, CI only)
+        run: |
+          npm install --no-save --no-audit --no-fund "@playwright/test@${PLAYWRIGHT_VERSION}"
+          npx playwright install --with-deps ${{ matrix.project == 'firefox' && 'firefox' || 'chromium' }}
+      - name: Run browser tests
+        run: npx playwright test --project=${{ matrix.project }}
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+
+  extension-lint:
+    name: Firefox add-on lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm run build
+      - run: npx --yes web-ext@8 lint --source-dir dist-ext/firefox
+
+  deploy:
+    name: deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [test, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

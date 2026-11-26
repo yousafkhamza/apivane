@@ -1,0 +1,16 @@
+{
+  "name": "apivane",
+  "version": "0.1.0",
+  "description": "Free API client, CI test runner and security checks. Local agent for the ApiVane web app.",
+  "type": "module",
+  "bin": { "apivane": "bin/apivane.js" },
+  "files": ["bin", "src", "core", "web", "README.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "keywords": ["api", "api-client", "postman-alternative", "api-testing", "security", "github-actions", "ci"],
+  "author": "Yousaf Hamza (https://github.com/yousafkhamza)",
+  "license": "MIT",
+  "homepage": "https://yousafkhamza.github.io/apivane/",
+  "repository": { "type": "git", "url": "git+https://github.com/yousafkhamza/apivane.git", "directory": "packages/cli" },
+  "bugs": "https://github.com/yousafkhamza/apivane/issues",
+  "publishConfig": { "access": "public", "provenance": true }
+}
