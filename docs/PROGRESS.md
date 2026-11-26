@@ -22,4 +22,5 @@ Current phase: **v0.1 built — waiting for first CI run** (nothing has been exe
 
 ## Session notes
 <!-- Newest first. 1–3 lines per session: what changed, anything the next session must know. -->
+- 2026-11-26: Releases now automatic in ci.yml `release` job (scripts/release.mjs, conventional commits → semver, tag via gh API). release.yml removed (tags made by GITHUB_TOKEN never trigger workflows). Repo version stays 0.1.0; CI applies the computed version before build.
 - 2026-11-26: Built v0.1 in one pass with zero deps (stack changed from React/Vite/TS — see CLAUDE.md). Design reference: design/demo.html. First CI run is the first real test; fix from logs.

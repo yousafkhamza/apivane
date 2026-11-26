@@ -52,7 +52,7 @@ Exit code `1` on any failed check or a security finding at or above `--fail-on` 
 
 GitHub Actions:
 ```yaml
-- uses: yousafkhamza/apivane@v0.1.0
+- uses: yousafkhamza/apivane@v0.1.0   # use the latest release tag
   with:
     env: staging
     fail-on: high
@@ -128,7 +128,16 @@ npm run e2e       # browser tests (needs: npm i --no-save @playwright/test@1.49.
 
 ### Publishing (maintainers)
 1. **GitHub Pages:** Settings → Pages → Source: **GitHub Actions**. Pushing to `main` deploys after tests pass. Custom domain: set repo variable `SITE_URL`.
-2. **Release:** bump `version` in `package.json` and `packages/cli/package.json`, tag `vX.Y.Z`. The release workflow publishes npm (needs `NPM_TOKEN` secret in a `release` environment), the GHCR image and a GitHub release with both extension zips.
+2. **Releases are automatic.** Every push to `main` that passes tests is checked for [Conventional Commits](https://www.conventionalcommits.org) since the last `v*` tag:
+
+   | Commit | Release |
+   |---|---|
+   | `fix: …`, `perf: …` | patch `0.1.0 → 0.1.1` |
+   | `feat: …` | minor `0.1.1 → 0.2.0` |
+   | `feat!: …` or `BREAKING CHANGE:` in the body | major (minor while on 0.x) |
+   | `docs:`, `chore:`, `ci:`, `test:` … or `[skip release]` | no release |
+
+   CI then creates the tag and GitHub release (notes + both extension zips), publishes npm (only if the `NPM_TOKEN` repo secret exists) and pushes `ghcr.io/<owner>/apivane:<version>` and `:latest`. The very first release uses the version in `package.json`. Versions are never committed back — the tag is the source of truth. PR titles are checked so squash merges always produce a valid commit.
 3. **Stores:** upload `apivane-chrome-X.Y.Z.zip` to the Chrome Web Store (also accepted by Edge Add-ons) and `apivane-firefox-X.Y.Z.zip` to addons.mozilla.org. Privacy policy: `docs/PRIVACY.md`.
 
 ## License
